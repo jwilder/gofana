@@ -36,7 +36,7 @@ function (angular, _, kbn) {
       console.log("deleteDashboard "+id)
       var deferred = $q.defer()
 
-        $http.delete('http://localhost:8080/dashboard/'+id).
+        $http.delete('/dashboard/'+id).
           success(function(data, status, headers, config) {
             deferred.resolve(id);
           }).
@@ -49,7 +49,7 @@ function (angular, _, kbn) {
 
     CustomDatasource.prototype.searchDashboards = function(queryString) {
         var deferred = $q.defer()
-        $http.get('http://localhost:8080/search?query='+queryString).
+        $http.get('/search?query='+queryString).
           success(function(data, status, headers, config) {
             deferred.resolve(data);
           }).
@@ -61,7 +61,7 @@ function (angular, _, kbn) {
 
     CustomDatasource.prototype.getDashboard = function(id, isTemp) {
         var deferred = $q.defer()
-        $http.get('http://localhost:8080/dashboard/'+id).
+        $http.get('/dashboard/'+id).
           success(function(data, status, headers, config) {
             deferred.resolve(data);
           }).
@@ -77,7 +77,7 @@ function (angular, _, kbn) {
         dashboard.id = id;
 
         var deferred = $q.defer()
-        $http.post('http://localhost:8080/dashboard/'+id, dashboard).
+        $http.post('/dashboard/'+id, dashboard).
           success(function(data, status, headers, config) {
             deferred.resolve({ title: dashboard.title, url: "/dashboard/db/" + id })
           }).
