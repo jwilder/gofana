@@ -1,0 +1,6 @@
+gofana
+dist
+*.gz
+grafana-*
+*.pem
+dashboards

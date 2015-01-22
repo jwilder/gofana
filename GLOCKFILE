@@ -1,0 +1,6 @@
+github.com/codegangsta/inject 9aea7a2fa5b79ef7fc00f63a575e72df33b4e886
+github.com/go-martini/martini bbd489b35fd7eac9aaf442e5671ab21cdd972926
+github.com/martini-contrib/auth a7b827c87c2d3e571c974f1fec378def3f2ea1ed
+github.com/martini-contrib/render b65063311fac6cbf84d3538f5715f7847e648322
+github.com/martini-contrib/secure 56b905eb8ab2eb124d2f4acfa3ea893df45b7d79
+github.com/oxtoacart/bpool 923fab21d0624a469b877a05bbfc562c1c26c663
