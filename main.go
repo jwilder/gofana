@@ -251,7 +251,7 @@ func main() {
 		go func() {
 			defer wg.Done()
 			log.Println("HTTPS listening on :8443")
-			if err := http.ListenAndServeTLS(":8443", "cert.pem", "key.pem", m); err != nil {
+			if err := http.ListenAndServeTLS(":8443", sslCert, sslKey, m); err != nil {
 				log.Fatal(err)
 
 			}
