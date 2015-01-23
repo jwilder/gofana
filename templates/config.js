@@ -20,7 +20,7 @@ define(['settings'], function(Settings) {
       {{ if .GraphiteURL }}
       graphite: {
         type: 'graphite',
-        url: "{{ .GraphiteURL }}",
+        url: "/graphite",
       },
       {{ end}}
       {{ if .InfluxDBURL }}
@@ -34,7 +34,6 @@ define(['settings'], function(Settings) {
       custom: {
         type: 'CustomDatasource',
         name: 'gofana',
-        url: 'http://localhost:1234',
         grafanaDB: true,
       },
     },

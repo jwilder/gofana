@@ -10,6 +10,7 @@ import (
 	"github.com/martini-contrib/render"
 	"github.com/martini-contrib/secure"
 	"github.com/martini-contrib/staticbin"
+
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -157,6 +158,50 @@ func gofanaConfig(w http.ResponseWriter) {
 	}
 }
 
+func copyHeader(source http.Header, dest *http.Header) {
+	for n, v := range source {
+		for _, vv := range v {
+			dest.Add(n, vv)
+		}
+	}
+}
+
+func graphiteProxy(w http.ResponseWriter, r *http.Request) {
+
+	target := graphiteURL
+	uri := target + r.RequestURI[len("/graphite"):]
+
+	rr, err := http.NewRequest(r.Method, uri, r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("ERROR: %s", err)
+		return
+	}
+	copyHeader(r.Header, &rr.Header)
+
+	// Create a client and query the target
+	var transport http.Transport
+	resp, err := transport.RoundTrip(rr)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("ERROR: %s", err)
+		return
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("ERROR: %s", err)
+		return
+	}
+
+	dH := w.Header()
+	copyHeader(resp.Header, &dH)
+
+	w.Write(body)
+}
+
 func main() {
 
 	flag.StringVar(&appDir, "app-dir", "", "Path to grafana installation")
@@ -234,6 +279,8 @@ func main() {
 	r.Delete("/dashboard/:id", deleteDashboard)
 	r.Get("/plugins/datasource.gofana.js", gofanaDatasource)
 	r.Get("/config.js", gofanaConfig)
+	r.Get("/graphite/**", graphiteProxy)
+	r.Post("/graphite/**", graphiteProxy)
 
 	// HTTP Listener
 	wg.Add(1)
