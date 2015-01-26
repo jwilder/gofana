@@ -32,13 +32,13 @@ When using Graphite, you do not need a separate [elasticsearch](http://www.elast
 
 ### Linux
 ```
-$ curl -L https://github.com/jwilder/gofana/releases/download/v0.0.4/gofana-linux-amd64-v0.0.4.tar.gz | tar xvzf - > gofana
+$ curl -L https://github.com/jwilder/gofana/releases/download/v0.0.5/gofana-linux-amd64-v0.0.5.tar.gz | tar xvzf - > gofana
 $ gofana -graphite-url http://127.0.0.1:8000
 ```
 
 ### OSX
 ```
-$ curl -L https://github.com/jwilder/gofana/releases/download/v0.0.4/gofana-darwin-amd64-v0.0.4.tar.gz | tar xvzf - > gofana
+$ curl -L https://github.com/jwilder/gofana/releases/download/v0.0.5/gofana-darwin-amd64-v0.0.5.tar.gz | tar xvzf - > gofana
 $ gofana -graphite-url http://127.0.0.1:8000
 ```
 
