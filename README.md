@@ -90,7 +90,7 @@ Gofana embeds the latest release of Grafana.  If you want to run an older or cus
 $ gofana -app-dir /mnt/grafana-1.8.1
 ```
 
-If you want to bundle a new version of Grafana within gofana, see the [Development](#Development) section.
+If you want to bundle a new version of Grafana within gofana, see the [Development](#development) section.
 
 
 ## Why Gofana
