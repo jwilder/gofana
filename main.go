@@ -166,10 +166,11 @@ func copyHeader(source http.Header, dest *http.Header) {
 	}
 }
 
-func graphiteProxy(w http.ResponseWriter, r *http.Request) {
+func proxy(w http.ResponseWriter, r *http.Request) {
 
 	target := graphiteURL
-	uri := target + r.RequestURI[len("/graphite"):]
+	stripped := r.RequestURI[strings.Index(r.RequestURI[1:], "/")+1:]
+	uri := target + stripped
 
 	rr, err := http.NewRequest(r.Method, uri, r.Body)
 	if err != nil {
@@ -208,7 +209,7 @@ func main() {
 	flag.StringVar(&dbDir, "db-dir", "dashboards", "Path to dashboard storage dir")
 	flag.StringVar(&basicAuth, "auth", "", "Basic auth username (user:pw)")
 	flag.StringVar(&graphiteURL, "graphite-url", "", "Graphite URL (http://host:port)")
-	flag.StringVar(&influxDBURL, "influxdb-url", "", "InfluxDB URL (http://host:port)")
+	flag.StringVar(&influxDBURL, "influxdb-url", "", "InfluxDB URL (http://host:8086/db/mydb)")
 	flag.StringVar(&sslCert, "ssl-cert", "", "SSL cert (PEM formatted)")
 	flag.StringVar(&sslKey, "ssl-key", "", "SSL key (PEM formatted)")
 	flag.BoolVar(&version, "version", false, "show version")
@@ -220,7 +221,7 @@ func main() {
 	}
 
 	if graphiteURL == "" && influxDBURL == "" {
-		fmt.Printf("No graphite-url or influxdb-url specified.\nUse -graphite-url http://host:port or -influxdb-url http://host:port\n")
+		fmt.Printf("No graphite-url or influxdb-url specified.\nUse -graphite-url http://host:port or -influxdb-url http://host:8086/db/mydb\n")
 		return
 	}
 
@@ -279,8 +280,10 @@ func main() {
 	r.Delete("/dashboard/:id", deleteDashboard)
 	r.Get("/plugins/datasource.gofana.js", gofanaDatasource)
 	r.Get("/config.js", gofanaConfig)
-	r.Get("/graphite/**", graphiteProxy)
-	r.Post("/graphite/**", graphiteProxy)
+	r.Get("/graphite/**", proxy)
+	r.Post("/graphite/**", proxy)
+	r.Get("/influxdb/**", proxy)
+	r.Post("/influxdb/**", proxy)
 
 	// HTTP Listener
 	wg.Add(1)
