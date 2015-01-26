@@ -21,7 +21,7 @@ It will also proxy Graphite and InfluxDB queries to simplifly serving Grafana ov
 * Single Linux/OSX binaries
 * _OAuth Authentication (coming soon)_
 * _OpenTSB support (coming soon)_
-* _S3 and other Dashboard Storage_
+* _S3 and other Dashboard Storage (coming soon)_
 
 ## Getting Started
 
