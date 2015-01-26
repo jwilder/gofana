@@ -27,8 +27,12 @@ define(['settings'], function(Settings) {
       influxdb: {
         type: 'influxdb',
         url: "{{ .InfluxDBURL }}",
-        username: 'root',
-        password: 'root',
+        {{ if .InfluxDBUser }}
+        username: '{{ .InfluxDBUser }}',
+        {{ end}}
+        {{ if .InfluxDBPass }}
+        password: '{{ .InfluxDBPass }}',
+        {{ end }}
       },
       {{ end }}
       custom: {

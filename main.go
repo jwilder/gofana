@@ -29,6 +29,8 @@ var (
 	appDir, dbDir   string
 	graphiteURL     string
 	influxDBURL     string
+	influxDBUser    string
+	influxDBPass    string
 	buildVersion    string
 	version         bool
 )
@@ -145,11 +147,15 @@ func gofanaConfig(w http.ResponseWriter) {
 	}
 
 	err = tmpl.Execute(w, struct {
-		GraphiteURL string
-		InfluxDBURL string
+		GraphiteURL  string
+		InfluxDBURL  string
+		InfluxDBUser string
+		InfluxDBPass string
 	}{
-		GraphiteURL: graphiteURL,
-		InfluxDBURL: influxDBURL,
+		GraphiteURL:  graphiteURL,
+		InfluxDBURL:  influxDBURL,
+		InfluxDBUser: influxDBUser,
+		InfluxDBPass: influxDBPass,
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -210,6 +216,8 @@ func main() {
 	flag.StringVar(&basicAuth, "auth", "", "Basic auth username (user:pw)")
 	flag.StringVar(&graphiteURL, "graphite-url", "", "Graphite URL (http://host:port)")
 	flag.StringVar(&influxDBURL, "influxdb-url", "", "InfluxDB URL (http://host:8086/db/mydb)")
+	flag.StringVar(&influxDBUser, "influxdb-user", "", "InfluxDB username")
+	flag.StringVar(&influxDBPass, "influxdb-pass", "", "InfluxDB password")
 	flag.StringVar(&sslCert, "ssl-cert", "", "SSL cert (PEM formatted)")
 	flag.StringVar(&sslKey, "ssl-key", "", "SSL key (PEM formatted)")
 	flag.BoolVar(&version, "version", false, "show version")
