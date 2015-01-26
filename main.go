@@ -22,17 +22,18 @@ import (
 )
 
 var (
-	db              *DashboardRepository
-	wg              sync.WaitGroup
-	basicAuth       string
-	sslCert, sslKey string
-	appDir, dbDir   string
-	graphiteURL     string
-	influxDBURL     string
-	influxDBUser    string
-	influxDBPass    string
-	buildVersion    string
-	version         bool
+	db                  *DashboardRepository
+	wg                  sync.WaitGroup
+	basicAuth           string
+	httpAddr, httpsAddr string
+	sslCert, sslKey     string
+	appDir, dbDir       string
+	graphiteURL         string
+	influxDBURL         string
+	influxDBUser        string
+	influxDBPass        string
+	buildVersion        string
+	version             bool
 )
 
 func addCorsHeaders(w http.ResponseWriter) {
@@ -214,12 +215,15 @@ func main() {
 	flag.StringVar(&appDir, "app-dir", "", "Path to grafana installation")
 	flag.StringVar(&dbDir, "db-dir", "dashboards", "Path to dashboard storage dir")
 	flag.StringVar(&basicAuth, "auth", "", "Basic auth username (user:pw)")
+	flag.StringVar(&httpAddr, "http-addr", ":8080", "HTTP Server bind address")
+	flag.StringVar(&httpsAddr, "https-addr", ":8443", "HTTPS Server bind address")
 	flag.StringVar(&graphiteURL, "graphite-url", "", "Graphite URL (http://host:port)")
 	flag.StringVar(&influxDBURL, "influxdb-url", "", "InfluxDB URL (http://host:8086/db/mydb)")
 	flag.StringVar(&influxDBUser, "influxdb-user", "", "InfluxDB username")
 	flag.StringVar(&influxDBPass, "influxdb-pass", "", "InfluxDB password")
 	flag.StringVar(&sslCert, "ssl-cert", "", "SSL cert (PEM formatted)")
 	flag.StringVar(&sslKey, "ssl-key", "", "SSL key (PEM formatted)")
+
 	flag.BoolVar(&version, "version", false, "show version")
 	flag.Parse()
 
@@ -297,8 +301,8 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Println("HTTP listening on :8080")
-		if err := http.ListenAndServe(":8080", m); err != nil {
+		log.Printf("HTTP listening on %s\n", httpAddr)
+		if err := http.ListenAndServe(httpAddr, m); err != nil {
 			log.Fatal(err)
 		}
 	}()
@@ -308,8 +312,8 @@ func main() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			log.Println("HTTPS listening on :8443")
-			if err := http.ListenAndServeTLS(":8443", sslCert, sslKey, m); err != nil {
+			log.Printf("HTTPS listening on %s", httpsAddr)
+			if err := http.ListenAndServeTLS(httpsAddr, sslCert, sslKey, m); err != nil {
 				log.Fatal(err)
 
 			}
