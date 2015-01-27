@@ -34,6 +34,12 @@ define(['settings'], function(Settings) {
         password: '{{ .InfluxDBPass }}',
         {{ end }}
       },
+      {{ end}}
+      {{ if .OpenTSDBUrl }}
+      opentsdb: {
+        type: 'opentsdb',
+        url: "/opentsdb",
+      },
       {{ end }}
       custom: {
         type: 'CustomDatasource',

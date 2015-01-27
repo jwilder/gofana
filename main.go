@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -32,6 +33,7 @@ var (
 	influxDBURL         string
 	influxDBUser        string
 	influxDBPass        string
+	openTSDBUrl         string
 	buildVersion        string
 	version             bool
 )
@@ -152,11 +154,13 @@ func gofanaConfig(w http.ResponseWriter) {
 		InfluxDBURL  string
 		InfluxDBUser string
 		InfluxDBPass string
+		OpenTSDBUrl  string
 	}{
 		GraphiteURL:  graphiteURL,
 		InfluxDBURL:  influxDBURL,
 		InfluxDBUser: influxDBUser,
 		InfluxDBPass: influxDBPass,
+		OpenTSDBUrl:  openTSDBUrl,
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -173,13 +177,29 @@ func copyHeader(source http.Header, dest *http.Header) {
 	}
 }
 
-func proxy(w http.ResponseWriter, r *http.Request) {
+func proxyOpenTSDB(w http.ResponseWriter, r *http.Request) {
+	proxy(openTSDBUrl, w, r)
+}
 
-	target := graphiteURL
+func proxyGraphite(w http.ResponseWriter, r *http.Request) {
+	proxy(graphiteURL, w, r)
+}
+func proxyInfluxDB(w http.ResponseWriter, r *http.Request) {
+	proxy(influxDBURL, w, r)
+}
+func proxy(target string, w http.ResponseWriter, r *http.Request) {
+
 	stripped := r.RequestURI[strings.Index(r.RequestURI[1:], "/")+1:]
 	uri := target + stripped
 
-	rr, err := http.NewRequest(r.Method, uri, r.Body)
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("ERROR: %s", err)
+		return
+	}
+
+	rr, err := http.NewRequest(r.Method, uri, bytes.NewBuffer(body))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("ERROR: %s", err)
@@ -197,7 +217,7 @@ func proxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("ERROR: %s", err)
@@ -221,6 +241,7 @@ func main() {
 	flag.StringVar(&influxDBURL, "influxdb-url", "", "InfluxDB URL (http://host:8086/db/mydb)")
 	flag.StringVar(&influxDBUser, "influxdb-user", "", "InfluxDB username")
 	flag.StringVar(&influxDBPass, "influxdb-pass", "", "InfluxDB password")
+	flag.StringVar(&openTSDBUrl, "opentsdb-url", "", "OpenTSDB URL (http://host:4242)")
 	flag.StringVar(&sslCert, "ssl-cert", "", "SSL cert (PEM formatted)")
 	flag.StringVar(&sslKey, "ssl-key", "", "SSL key (PEM formatted)")
 
@@ -232,8 +253,8 @@ func main() {
 		return
 	}
 
-	if graphiteURL == "" && influxDBURL == "" {
-		fmt.Printf("No graphite-url or influxdb-url specified.\nUse -graphite-url http://host:port or -influxdb-url http://host:8086/db/mydb\n")
+	if graphiteURL == "" && influxDBURL == "" && openTSDBUrl == "" {
+		fmt.Printf("No graphite-url, influxdb-url or opentsdb-url specified.\nUse -graphite-url http://host:port or -influxdb-url http://host:8086/db/mydb or -opentsdb-url http://host:4242\n")
 		return
 	}
 
@@ -292,10 +313,12 @@ func main() {
 	r.Delete("/dashboard/:id", deleteDashboard)
 	r.Get("/plugins/datasource.gofana.js", gofanaDatasource)
 	r.Get("/config.js", gofanaConfig)
-	r.Get("/graphite/**", proxy)
-	r.Post("/graphite/**", proxy)
-	r.Get("/influxdb/**", proxy)
-	r.Post("/influxdb/**", proxy)
+	r.Get("/graphite/**", proxyGraphite)
+	r.Post("/graphite/**", proxyGraphite)
+	r.Get("/influxdb/**", proxyInfluxDB)
+	r.Post("/influxdb/**", proxyInfluxDB)
+	r.Get("/opentsdb/**", proxyOpenTSDB)
+	r.Post("/opentsdb/**", proxyOpenTSDB)
 
 	// HTTP Listener
 	wg.Add(1)
