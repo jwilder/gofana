@@ -1,6 +1,6 @@
 # Gofana
 
-![latest 0.0.5](https://img.shields.io/badge/latest-0.0.5-brightgreen.svg)
+![latest v0.0.6](https://img.shields.io/badge/latest-v0.0.6-brightgreen.svg)
 ![grafana 1.9.1](https://img.shields.io/badge/grafana-1.9.1-orange.svg) ![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
 Gofana is a self-contained [Grafana](http://grafana.org/) server written in Go with minimal dependencies.  It's designed to make it easy to setup a secure,  grafana-based dashboard system with your existing Graphite or InfluxDB servers.
@@ -17,28 +17,29 @@ It will also proxy Graphite and InfluxDB queries to simplifly serving Grafana ov
 * Local file based dashboard store
 * HTTP and HTTPS server support
 * Basic Authentication Support
-* Graphite and InfluxDB proxy
+* Graphite, InfluxDB and OpenTSDB proxying
 * Single Linux/OSX binaries
 * _OAuth Authentication (coming soon)_
-* _OpenTSB support (coming soon)_
 * _S3 and other Dashboard Storage (coming soon)_
 
 ## Getting Started
 
-Gofana requires an existing [Graphite](http://graphite.wikidot.com/) or [InfluxDB](http://influxdb.com/) installation.
+Gofana requires an existing [Graphite](http://graphite.wikidot.com/), [InfluxDB](http://influxdb.com/)
+or [OpenTSDB](http://http://opentsdb.net/) installation.
 
 Gofana handles dashboard storage using the local filesystem (in a `dashboards` directory by default).
-When using Graphite, you do not need a separate [elasticsearch](http://www.elasticsearch.org/) server for dashboard storage.  Similarly, when using InfluxDB, dashboards will not be stored in InfluxDB.
+When using Graphite or OpenTSDB, you do not need a separate [elasticsearch](http://www.elasticsearch.org/)
+server for dashboard storage.  Similarly, when using InfluxDB, dashboards will not be stored in InfluxDB.
 
 ### Linux
 ```
-$ curl -L https://github.com/jwilder/gofana/releases/download/v0.0.5/gofana-linux-amd64-v0.0.5.tar.gz | tar xvzf - > gofana
+$ curl -sfL https://github.com/jwilder/gofana/releases/download/v0.0.6/gofana-linux-amd64-v0.0.6.tar.gz | tar xvzf - > gofana
 $ gofana -graphite-url http://127.0.0.1:8000
 ```
 
 ### OSX
 ```
-$ curl -L https://github.com/jwilder/gofana/releases/download/v0.0.5/gofana-darwin-amd64-v0.0.5.tar.gz | tar xvzf - > gofana
+$ curl -sfL https://github.com/jwilder/gofana/releases/download/v0.0.6/gofana-darwin-amd64-v0.0.6.tar.gz | tar xvzf - > gofana
 $ gofana -graphite-url http://127.0.0.1:8000
 ```
 
