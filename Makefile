@@ -8,6 +8,7 @@ GRAFANA_VERSION=1.9.1
 all: gofana
 
 deps:
+	go get github.com/jteeuwen/go-bindata/...
 	go get github.com/robfig/glock
 	glock sync github.com/jwilder/gofana
 
