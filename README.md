@@ -26,7 +26,7 @@ It will also proxy Graphite and InfluxDB queries to simplifly serving Grafana ov
 ## Getting Started
 
 Gofana requires an existing [Graphite](http://graphite.wikidot.com/), [InfluxDB](http://influxdb.com/)
-or [OpenTSDB](http://http://opentsdb.net/) installation.
+or [OpenTSDB](http://opentsdb.net/) installation.
 
 Gofana handles dashboard storage using the local filesystem (in a `dashboards` directory by default).
 When using Graphite or OpenTSDB, you do not need a separate [elasticsearch](http://www.elasticsearch.org/)
