@@ -2,6 +2,8 @@
 
 ![latest v0.0.6](https://img.shields.io/badge/latest-v0.0.6-brightgreen.svg)
 ![grafana 1.9.1](https://img.shields.io/badge/grafana-1.9.1-orange.svg) ![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+[![Build Status](https://travis-ci.org/jwilder/gofana.svg?branch=master)](https://travis-ci.org/jwilder/gofana)
+
 
 Gofana is a self-contained [Grafana](http://grafana.org/) server written in Go with minimal dependencies.  It's designed to make it easy to setup a secure,  grafana-based dashboard system with your existing Graphite or InfluxDB servers.
 

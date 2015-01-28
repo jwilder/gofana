@@ -7,6 +7,9 @@ GRAFANA_VERSION=1.9.1
 
 all: gofana
 
+deps:
+	glock sync github.com/jwilder/gofana
+
 grafana-$(GRAFANA_VERSION).tar.gz:
 	wget http://grafanarel.s3.amazonaws.com/grafana-$(GRAFANA_VERSION).tar.gz
 
@@ -30,9 +33,7 @@ dist: dist-clean
 	mkdir -p dist/linux/amd64 && GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o dist/linux/amd64/gofana
 	mkdir -p dist/darwin/amd64 && GOOS=darwin GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o dist/darwin/amd64/gofana
 
-
-release: dist
-	glock sync github.com/jwilder/gofana
+release: deps dist
 	tar -cvzf gofana-linux-amd64-$(TAG).tar.gz -C dist/linux/amd64 gofana
 	tar -cvzf gofana-darwin-amd64-$(TAG).tar.gz -C dist/darwin/amd64 gofana
 
