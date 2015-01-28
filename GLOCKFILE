@@ -3,4 +3,5 @@ github.com/go-martini/martini bbd489b35fd7eac9aaf442e5671ab21cdd972926
 github.com/martini-contrib/auth a7b827c87c2d3e571c974f1fec378def3f2ea1ed
 github.com/martini-contrib/render b65063311fac6cbf84d3538f5715f7847e648322
 github.com/martini-contrib/secure 56b905eb8ab2eb124d2f4acfa3ea893df45b7d79
+github.com/martini-contrib/staticbin b9631fb8c188bec7aefed202f05fb3b76abadced
 github.com/oxtoacart/bpool 923fab21d0624a469b877a05bbfc562c1c26c663
