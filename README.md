@@ -4,7 +4,7 @@
 ![grafana 1.9.1](https://img.shields.io/badge/grafana-1.9.1-orange.svg) ![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 [![Build Status](https://travis-ci.org/jwilder/gofana.svg?branch=master)](https://travis-ci.org/jwilder/gofana)
 
-Gofana is a self-contained [Grafana](http://grafana.org/) server written in Go with minimal dependencies.  It's designed to make it easy to setup a secure,  grafana-based dashboard system with your existing Graphite or InfluxDB servers.
+Gofana is a self-contained [Grafana](http://grafana.org/) web server written in Go with no extra dependencies.  It's designed to make it easy to setup a secure, Grafana-based dashboard system with your existing Graphite, InfluxDB or OpenTSDB servers.  There is no additional nginx/apache, ElasticSearch installation or configuration required.
 
 It handles dashboard storage so that saved dashboards do not need to be saved in Elasticsearch or within InfluxDB making it easier to maintain and back them  up.
 
@@ -15,7 +15,7 @@ It will also proxy Graphite and InfluxDB queries to simplifly serving Grafana ov
 ## Features
 
 * Self-contained grafana 1.9.1 release
-* Local file based dashboard store
+* Local file based dashboard storage
 * HTTP and HTTPS server support
 * Basic Authentication Support
 * Graphite, InfluxDB and OpenTSDB proxying
