@@ -46,7 +46,7 @@ $ gofana -graphite-url http://127.0.0.1:8000
 
 ### Docker
 ```
-$ docker run -d -v /mnt/my/dashboard:/app/dashboards -p 80:8080 -p 443:8443 jwilder/gofana -graphite-url http://host:port
+$ docker run --name gofana -d -v /mnt/my/dashboard:/app/dashboards -p 80:8080 -p 443:8443 jwilder/gofana -graphite-url http://host:port
 ```
 
 ## Basic Authentication
