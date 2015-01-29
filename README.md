@@ -8,7 +8,7 @@ Gofana is a self-contained [Grafana](http://grafana.org/) web server written in 
 
 It handles dashboard storage so that saved dashboards do not need to be saved in Elasticsearch or within InfluxDB making it easier to maintain and back them  up.
 
-It will also proxy Graphite and InfluxDB queries to simplifly serving Grafana over HTTPS as well as removing the need for having Grafana query your metrics store directly.
+It will also proxy Graphite, InfluxDB and OpenTSDB queries to simplifly serving Grafana over HTTPS as well as removing the need for having Grafana query your metrics store directly.
 
 ![Grafana Graphs](docs/graphs.png "Grafana Graphs")
 
