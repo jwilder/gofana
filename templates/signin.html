@@ -1,0 +1,33 @@
+<html>
+<head>
+<style>
+    html {
+        font-family: sans-serif;
+    }
+    h1 {
+        font-size: medium;
+    }
+    body {
+        text-align: center;
+        margin-top: 20%;
+    }
+    .error { color: red; font-size: big }
+</style>
+</head>
+<body>
+
+<h1>
+    Select a provider:
+</h1>
+{{ if .Error }}
+<p class="error">
+{{ .Error }}
+</p>
+{{ end }}
+{{ if .Google }}
+<div>
+    <a href="/google/auth"><img width="200" src="https://developers.google.com/accounts/images/sign-in-with-google.png" alt="Sign-In with Google"></a>
+</div>
+{{ end }}
+</body>
+</html>

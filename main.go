@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -10,7 +11,12 @@ import (
 	"github.com/martini-contrib/auth"
 	"github.com/martini-contrib/render"
 	"github.com/martini-contrib/secure"
+	"github.com/martini-contrib/sessions"
 	"github.com/martini-contrib/staticbin"
+	"github.com/stretchr/gomniauth"
+	"github.com/stretchr/gomniauth/providers/google"
+	"github.com/stretchr/objx"
+	"github.com/stretchr/signature"
 
 	"io/ioutil"
 	"log"
@@ -22,26 +28,149 @@ import (
 	"text/template"
 )
 
+const (
+	defaultSessionSecret = "e40f5e3a62f25ef48eeb03440735831a"
+)
+
 var (
-	db                  *DashboardRepository
-	wg                  sync.WaitGroup
-	basicAuth           string
-	httpAddr, httpsAddr string
-	sslCert, sslKey     string
-	appDir, dbDir       string
-	graphiteURL         string
-	influxDBURL         string
-	influxDBUser        string
-	influxDBPass        string
-	openTSDBUrl         string
-	buildVersion        string
-	version             bool
+	db                                 *DashboardRepository
+	wg                                 sync.WaitGroup
+	basicAuth, authDomain              string
+	httpAddr, httpsAddr                string
+	sslCert, sslKey                    string
+	appDir, dbDir                      string
+	graphiteURL                        string
+	influxDBURL                        string
+	influxDBUser                       string
+	influxDBPass                       string
+	openTSDBUrl                        string
+	buildVersion                       string
+	hostAddr                           string
+	googleClientID, googleClientSecret string
+	sessionSecret                      string
+	version                            bool
 )
 
 func addCorsHeaders(w http.ResponseWriter) {
 	w.Header().Add("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Content-Length")
 	w.Header().Add("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET, POST, PUT, DELETE")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
+}
+
+func loginRequired(s sessions.Session, c martini.Context, w http.ResponseWriter, r *http.Request) {
+	if strings.HasSuffix(r.URL.Path, "/oauth2callback") ||
+		strings.HasSuffix(r.URL.Path, "/signin") ||
+		strings.HasSuffix(r.URL.Path, "/auth") {
+		return
+	}
+
+	if s.Get("username") == nil {
+		http.Redirect(w, r, "/signin", http.StatusFound)
+	}
+}
+
+func authRedirect(params martini.Params, s sessions.Session, c martini.Context, w http.ResponseWriter, r *http.Request) {
+	providerName := params["provider"]
+	if providerName == "" {
+		http.Error(w, "Unknown provider", http.StatusBadRequest)
+		return
+	}
+
+	provider, err := gomniauth.Provider(providerName)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("ERROR: %s", err)
+		return
+	}
+
+	authUrl, err := provider.GetBeginAuthURL(nil, nil)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("ERROR: %s", err)
+		return
+	}
+	http.Redirect(w, r, authUrl, http.StatusFound)
+}
+
+func getSignin(s sessions.Session, w http.ResponseWriter, r *http.Request) {
+	s.Delete("username")
+	if !oauthEnabled() {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+
+	body, err := Asset("templates/signin.html")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("ERROR: %s", err)
+		return
+	}
+
+	tmpl, err := template.New("config.js").Parse(string(body))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("ERROR: %s", err)
+		return
+	}
+
+	err = tmpl.Execute(w, struct {
+		Error  string
+		Google bool
+	}{
+		Error:  r.FormValue("error"),
+		Google: googleOauthEnabled(),
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("ERROR: %s", err)
+		return
+	}
+}
+
+func oauth2callback(params martini.Params, s sessions.Session, c martini.Context, w http.ResponseWriter, r *http.Request) {
+	providerName := params["provider"]
+	if providerName == "" {
+		http.Error(w, "Unknown provider", http.StatusBadRequest)
+		return
+	}
+
+	provider, err := gomniauth.Provider(providerName)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("ERROR: %s", err)
+		return
+	}
+
+	omap, err := objx.FromURLQuery(r.URL.RawQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	creds, err := provider.CompleteAuth(omap)
+	if err != nil {
+		s.Delete("username")
+		http.Redirect(w, r, "/signin?error=Access+Denied", http.StatusFound)
+		log.Printf("ERROR: %s", err)
+		return
+	}
+
+	user, err := provider.GetUser(creds)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("ERROR: %s", err)
+		return
+	}
+
+	if strings.HasSuffix(user.Email(), authDomain) {
+		log.Printf("%s authenticated via %s", user.Email(), providerName)
+		s.Set("username", user.Email())
+	} else {
+		http.Redirect(w, r, "/signin", http.StatusFound)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func saveDashboard(w http.ResponseWriter, r *http.Request, params martini.Params) {
@@ -230,11 +359,20 @@ func proxy(target string, w http.ResponseWriter, r *http.Request) {
 	w.Write(body)
 }
 
+func googleOauthEnabled() bool {
+	return googleClientID != "" && googleClientSecret != ""
+}
+func oauthEnabled() bool {
+	return googleOauthEnabled()
+}
+
 func main() {
 
 	flag.StringVar(&appDir, "app-dir", "", "Path to grafana installation")
 	flag.StringVar(&dbDir, "db-dir", "dashboards", "Path to dashboard storage dir")
+	flag.StringVar(&authDomain, "auth-domain", "", "OAuth2 domain users must authenticated from (mydomain.com)")
 	flag.StringVar(&basicAuth, "auth", "", "Basic auth username (user:pw)")
+	flag.StringVar(&sessionSecret, "session-secret", defaultSessionSecret, "Session secret key")
 	flag.StringVar(&httpAddr, "http-addr", ":8080", "HTTP Server bind address")
 	flag.StringVar(&httpsAddr, "https-addr", ":8443", "HTTPS Server bind address")
 	flag.StringVar(&graphiteURL, "graphite-url", "", "Graphite URL (http://host:port)")
@@ -244,6 +382,9 @@ func main() {
 	flag.StringVar(&openTSDBUrl, "opentsdb-url", "", "OpenTSDB URL (http://host:4242)")
 	flag.StringVar(&sslCert, "ssl-cert", "", "SSL cert (PEM formatted)")
 	flag.StringVar(&sslKey, "ssl-key", "", "SSL key (PEM formatted)")
+	flag.StringVar(&hostAddr, "host-addr", "http://localhost:8080", "Public server address (http://mydomain.com)")
+	flag.StringVar(&googleClientID, "google-client-id", "", "Google Oauth2 Client ID")
+	flag.StringVar(&googleClientSecret, "google-client-secret", "", "Google Oauth2 Client Sercret")
 
 	flag.BoolVar(&version, "version", false, "show version")
 	flag.Parse()
@@ -251,6 +392,10 @@ func main() {
 	if version {
 		println(buildVersion)
 		return
+	}
+
+	if sessionSecret == defaultSessionSecret {
+		log.Printf("WARN: Session secret key is using the hard-coded default. Use -session-secret <value> for a live deployment.\n")
 	}
 
 	if graphiteURL == "" && influxDBURL == "" && openTSDBUrl == "" {
@@ -284,10 +429,31 @@ func main() {
 	m.Action(r.Handle)
 
 	if sslCert != "" && sslKey != "" {
-		m.Use(secure.Secure(secure.Options{
-			SSLRedirect: true,
-			SSLHost:     "localhost:8443",
-		}))
+		m.Use(secure.Secure(secure.Options{}))
+	}
+
+	b := make([]byte, 32)
+	_, err = rand.Read(b)
+	if err != nil {
+		fmt.Printf("ERROR: %s\n", err)
+		return
+	}
+
+	m.Use(sessions.Sessions("session", sessions.NewCookieStore([]byte(sessionSecret))))
+	if oauthEnabled() {
+
+		if authDomain == "" {
+			fmt.Println("ERROR: No -auth-domain specified.  Cannot authenticate with OAuth2.\n")
+			return
+		}
+
+		gomniauth.SetSecurityKey(signature.RandomKey(64))
+		providers := gomniauth.WithProviders()
+
+		if googleOauthEnabled() {
+			providers.Add(google.New(googleClientID, googleClientSecret, fmt.Sprintf("%s/google/oauth2callback", hostAddr)))
+		}
+		m.Use(loginRequired)
 	}
 
 	m.Use(addCorsHeaders)
@@ -319,6 +485,9 @@ func main() {
 	r.Post("/influxdb/**", proxyInfluxDB)
 	r.Get("/opentsdb/**", proxyOpenTSDB)
 	r.Post("/opentsdb/**", proxyOpenTSDB)
+	r.Get("/:provider/auth", authRedirect)
+	r.Get("/:provider/oauth2callback", oauth2callback)
+	r.Get("/signin", getSignin)
 
 	// HTTP Listener
 	wg.Add(1)
