@@ -20,13 +20,13 @@ define(['settings'], function(Settings) {
       {{ if .GraphiteURL }}
       graphite: {
         type: 'graphite',
-        url: "/graphite",
+        url: '/graphite',
       },
       {{ end}}
       {{ if .InfluxDBURL }}
       influxdb: {
         type: 'influxdb',
-        url: "{{ .InfluxDBURL }}",
+        url: '/influxdb',
         {{ if .InfluxDBUser }}
         username: '{{ .InfluxDBUser }}',
         {{ end}}
@@ -38,7 +38,7 @@ define(['settings'], function(Settings) {
       {{ if .OpenTSDBUrl }}
       opentsdb: {
         type: 'opentsdb',
-        url: "/opentsdb",
+        url: '/opentsdb',
       },
       {{ end }}
       custom: {
