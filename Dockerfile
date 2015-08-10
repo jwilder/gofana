@@ -1,5 +1,5 @@
 FROM debian:wheezy
-MAINTAINER Jason Wilder <jwilder@litl.com>
+MAINTAINER Jason Wilder <jason@influxdb.com>
 
 RUN mkdir /app
 WORKDIR /app
